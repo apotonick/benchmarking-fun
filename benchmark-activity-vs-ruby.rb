@@ -12,11 +12,14 @@ WITH STEP INTERFACE
             activity     92.473k (± 1.8%) i/s -    464.275k in   5.022302s
 
 
-
 WITH CIRCUIT INTERFACE
-Calculating -------------------------------------
                 ruby      1.475M (± 1.9%) i/s -      7.490M in   5.079638s
             activity    192.998k (± 1.3%) i/s -    984.050k in   5.099648s
+
+
+WITH CALLING :activity DIRECTLY
+                ruby      1.381M (± 4.1%) i/s -      6.924M in   5.022472s
+            activity    201.448k (± 6.4%) i/s -      1.017M in   5.070345s
 
 =end
 
