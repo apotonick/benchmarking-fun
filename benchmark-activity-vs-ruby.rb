@@ -33,6 +33,13 @@ set_variable for ruby
                 ruby      1.398M (± 1.8%) i/s -      7.095M in   5.077891s
             activity    213.497k (± 1.4%) i/s -      1.089M in   5.099665s
 
+[args] becomes ctx in activity
+                ruby      1.416M (± 2.5%) i/s -      7.151M in   5.053467s
+            activity    215.552k (± 0.7%) i/s -      1.088M in   5.045472s
+
+activity skips Start
+              ruby      1.409M (± 1.8%) i/s -      7.111M in   5.049923s
+            activity    236.611k (± 0.6%) i/s -      1.199M in   5.065879s
 
 =end
 
@@ -40,31 +47,38 @@ set_variable for ruby
 
 class OutPipe < Trailblazer::Activity::Railway
 
-  def self.call_decision(args, **options)
-    filter = args[0].condition
+  def self.call_decision(ctx, **options)
+    filter = ctx.condition
 
-    signal = filter.(args, **options) # circuit-step interface
-    return signal ? Trailblazer::Activity::Right : Trailblazer::Activity::Left, args
+    signal = filter.(ctx, **options) # circuit-step interface
+    return signal ? Trailblazer::Activity::Right : Trailblazer::Activity::Left, ctx
   end
 
-  def self.call_filter(args, **options)
-    filter = args[0].filter
+  def self.call_filter(ctx, **options)
+    filter = ctx.filter
 
-    signal, _ = filter.(args, **options) # circuit-step interface
-    args[0][:value] = signal
+    signal, _ = filter.(ctx, **options) # circuit-step interface
+    ctx[:value] = signal
 
-    return Trailblazer::Activity::Right, args
+    return Trailblazer::Activity::Right, ctx
   end
 
-  def self.write_to_aggregate(args, **)
-    args[0][:aggregate][args[0].write_name] = args[0][:value]
-    return Trailblazer::Activity::Right, args
+  def self.write_to_aggregate(ctx, **)
+    ctx[:aggregate][ctx.write_name] = ctx[:value]
+    return Trailblazer::Activity::Right, ctx
   end
 
   step task: method(:call_decision)
   step task: method(:call_filter)
   step task: method(:write_to_aggregate)
+
+
+  to_h[:circuit].instance_variable_set(:@start_task, method(:call_decision))
+
+  puts to_h[:circuit].instance_variable_get(:@start_task)
 end
+
+
 
 
 
@@ -123,15 +137,19 @@ class HashCtx < Hash
   attr_reader :write_name
 end
 
+
+activity_condition = ->(ctx, **circuit_options) { ctx[:pass] }
+activity_filter = ->(ctx, **circuit_options) { ctx[:pass] }
+
 wrap_ctx = HashCtx.new(
-  @condition,
-  @filter,
+  activity_condition,
+  activity_filter,
   @write_name
 )
 wrap_ctx[:aggregate]  = {}
 wrap_ctx[:pass]       = true
 
-signa, (ctx, _) = OutPipe.to_h[:activity].([wrap_ctx])
+signa, (ctx, _) = OutPipe.to_h[:activity].(wrap_ctx)
 pp ctx
 
 Benchmark.ips do |x|
@@ -147,15 +165,15 @@ Benchmark.ips do |x|
   activity = OutPipe.to_h[:activity]
 
     _wrap_ctx = HashCtx.new(
-      @condition,
-      @filter,
+      activity_condition,
+      activity_filter,
       @write_name,
     )
   x.report("activity") {
     _wrap_ctx[:aggregate]  = {}
     _wrap_ctx[:pass]       = true
 
-    _, (ctx, _) = activity.([_wrap_ctx ])
+    _, (ctx, _) = activity.(_wrap_ctx)
   }
 
 end
