@@ -45,6 +45,15 @@ activity 1.0.1
                ruby      1.353M (± 2.2%) i/s -      6.843M in   5.061270s
             activity    230.110k (± 1.0%) i/s -      1.163M in   5.053997s
 
+don't freeze circuit_options in Circuit
+                ruby      1.348M (± 2.5%) i/s -      6.794M in   5.043498s
+            activity    227.496k (± 5.7%) i/s -      1.151M in   5.079696s
+
+call circuit directly
+                ruby      1.346M (± 2.4%) i/s -      6.816M in   5.066014s
+            activity    251.755k (± 1.2%) i/s -      1.277M in   5.071317s
+
+
 =end
 
 
@@ -151,7 +160,7 @@ wrap_ctx = HashCtx.new(
 wrap_ctx[:aggregate]  = {}
 wrap_ctx[:pass]       = true
 
-signa, (ctx, _) = OutPipe.to_h[:activity].(wrap_ctx)
+signa, (ctx, _) = OutPipe.to_h[:circuit].(wrap_ctx)
 pp ctx
 
 Benchmark.ips do |x|
@@ -164,7 +173,7 @@ Benchmark.ips do |x|
     call_with_decision(wrap_ctx, original_args)
   }
 
-  activity = OutPipe.to_h[:activity]
+  circuit = OutPipe.to_h[:circuit]
 
     _wrap_ctx = HashCtx.new(
       activity_condition,
@@ -175,7 +184,7 @@ Benchmark.ips do |x|
     _wrap_ctx[:aggregate]  = {}
     _wrap_ctx[:pass]       = true
 
-    _, (ctx, _) = activity.(_wrap_ctx)
+    _, (ctx, _) = circuit.(_wrap_ctx)
   }
 
 end
