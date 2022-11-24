@@ -1,8 +1,8 @@
-gem "benchmark-ips"
 require 'benchmark/ips'
 
 
-gem "trailblazer-activity-dsl-linear", "1.0.0"
+# gem "trailblazer-activity-dsl-linear", "1.0.0"
+
 
 require "trailblazer/activity/dsl/linear"
 
@@ -41,6 +41,10 @@ activity skips Start
               ruby      1.409M (± 1.8%) i/s -      7.111M in   5.049923s
             activity    236.611k (± 0.6%) i/s -      1.199M in   5.065879s
 
+activity 1.0.1
+               ruby      1.353M (± 2.2%) i/s -      6.843M in   5.061270s
+            activity    230.110k (± 1.0%) i/s -      1.163M in   5.053997s
+
 =end
 
 
@@ -74,8 +78,6 @@ class OutPipe < Trailblazer::Activity::Railway
 
 
   to_h[:circuit].instance_variable_set(:@start_task, method(:call_decision))
-
-  puts to_h[:circuit].instance_variable_get(:@start_task)
 end
 
 
