@@ -57,7 +57,7 @@ class OutPipe < Trailblazer::Activity::Railway
   end
 
   def self.write_to_aggregate(args, **)
-    args[0][:aggregate][@write_name] = args[0][:value]
+    args[0][:aggregate][args[0].write_name] = args[0][:value]
     return Trailblazer::Activity::Right, args
   end
 
@@ -111,19 +111,22 @@ pp call_with_decision(wrap_ctx, original_args)
 
 
 class HashCtx < Hash
-  def initialize(condition, filter)
+  def initialize(condition, filter, write_name)
     super()
     @condition = condition
     @filter = filter
+    @write_name = write_name
   end
 
   attr_reader :condition
   attr_reader :filter
+  attr_reader :write_name
 end
 
 wrap_ctx = HashCtx.new(
   @condition,
-  @filter
+  @filter,
+  @write_name
 )
 wrap_ctx[:aggregate]  = {}
 wrap_ctx[:pass]       = true
@@ -145,7 +148,8 @@ Benchmark.ips do |x|
 
     _wrap_ctx = HashCtx.new(
       @condition,
-      @filter
+      @filter,
+      @write_name,
     )
   x.report("activity") {
     _wrap_ctx[:aggregate]  = {}
