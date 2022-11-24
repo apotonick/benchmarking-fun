@@ -53,6 +53,9 @@ call circuit directly
                 ruby      1.346M (± 2.4%) i/s -      6.816M in   5.066014s
             activity    251.755k (± 1.2%) i/s -      1.277M in   5.071317s
 
+don't pass **circuit_options to runner but positional arg
+               ruby      1.327M (± 2.7%) i/s -      6.674M in   5.032478s
+            activity    264.985k (± 1.4%) i/s -      1.328M in   5.011484s
 
 =end
 
@@ -162,6 +165,37 @@ wrap_ctx[:pass]       = true
 
 signa, (ctx, _) = OutPipe.to_h[:circuit].(wrap_ctx)
 pp ctx
+
+
+
+def profile(activity_condition, activity_filter)
+  require 'ruby-prof'
+
+# profile the code
+  circuit = OutPipe.to_h[:circuit]
+RubyProf.start
+# ... code to profile ...
+
+  _wrap_ctx = HashCtx.new(
+    activity_condition,
+    activity_filter,
+    @write_name,
+  )
+  _wrap_ctx[:aggregate]  = {}
+  _wrap_ctx[:pass]       = true
+
+  _, (ctx, _) = circuit.(_wrap_ctx)
+result = RubyProf.stop
+
+# print a flat profile to text
+printer = RubyProf::FlatPrinter.new(result)
+printer.print(STDOUT)
+end
+
+
+profile(activity_condition, activity_filter)
+exit
+
 
 Benchmark.ips do |x|
 
